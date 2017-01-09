@@ -1,0 +1,134 @@
+それでは、「SwiftのString(文字列) APIとの付き合い方」の発表を始めます。
+https://swift-tweets.github.io の発表概要に記載した通り、そこに挙げている3つの記事は理解済みの前提とします(そうでなくとも分かる話も多いと思いますが)。
+
+---
+
+まずSwiftの文字列処理をコード例を交えながら見ていきます。SwiftのStringはCharacter・Unicode Scalar・UTF-16・UTF-8という4つのView(表現)を持っています。
+
+---
+
+通常の文字列処理では書記素クラスタ表現であるCharacter Viewを主に扱うことになります。
+書記素クラスタとは、抽象文字すなわち目で見た一文字単位の集合です。
+
+---
+
+CharacterViewはStringから`.characters`でアクセスできて、各種使用例はこれらのリファレンスに書かれています:
+
+- https://developer.apple.com/reference/swift/string
+- https://developer.apple.com/reference/swift/string.characterview
+
+---
+
+リファレンスのOverviewにある通り一般的な文字列操作が面倒です。カウントするだけでもcharactersを介す必要があり、さらにIntによるsubscriptも不可でIndex型による操作を強いられます。
+
+```swift:characters.swift
+let str = "abcde"
+
+// カウント
+str.characters.count
+// → 5
+
+let index: String.CharacterView.Index = str.characters.index(of: "c")!
+let chars: String.CharacterView = str.characters.prefix(upTo: index)
+// Stringにキャスト必要
+String(chars)
+```
+
+---
+
+こういった扱いのしにくさは、SwiftのString APIが厳密となっているトレードオフであるものの、とはいえ普段の文字列処理の際に一々複雑な記述を強いられるのは抵抗も感じます。
+
+---
+
+この扱いにくさへどう対処するのが良いか、いくつかの観点で考察していきます。
+まずCharacter Viewなど4つのViewに分かれているのは、「文字列」といっても色々な表現があることに依ります。
+
+---
+
+それが予めきちんと分類されているのは良いですが、最も扱う頻度の多いCharacter Viewをデフォルトで直接扱いたくなってきます。
+String APIを触っていると実は標準で中途半端にそうなっていることが見受けられます。
+
+---
+
+例えば、StringからもIndexを取得できますが、それはCharacterViewのIndexのtypealiasとして定義されているため、実はcharactersを介して取得したものまったく同じです。
+
+```swift:index.swift
+// StringのIndexは次のように定義されている
+public struct String {
+  public typealias Index = String.CharacterView.Index
+}
+
+// 以下はすべてtrue
+str.startIndex == str.characters.startIndex
+str.endIndex == str.characters.endIndex
+String.Index.self == String.CharacterView.Index.self
+
+// 以下などはfalse
+String.Index.self == String.UnicodeScalarView.Index.self
+```
+
+---
+
+取得できるIndexが同一ということは、すなわちStringはデフォルトでCharacter View扱いとなっているとみなせるのではないでしょうか。
+
+
+
+---
+
+少し余談ですが、Indexを利用して、カウントもcharacters関係無く取得することが可能です。
+
+```swift:count.swift
+extension String {
+    var countOriginal: Int {
+        var index = startIndex
+        var count = 0
+        while true {
+            if index == endIndex {
+                return count
+            }
+            count += 1
+            index = self.index(after: index)
+        }
+    }
+    // 次のように書けば良いが、上のは`characters`使わない縛り
+    var count: Int {
+        return characters.count
+    }
+}
+```
+
+---
+
+以上のようにStringから直接取得したIndexはcharactersのIndex操作に使えるので、Indexはcharactersを介さずに済み少しシンプルな記述とできます。
+
+```swift:count2.swift
+let str = "1️⃣2️⃣3️⃣4️⃣5️⃣"
+
+let start = str.index(after: str.startIndex)
+let end = str.index(start, offsetBy: 2)
+// 以下のようにしても同様に動くが、`.characters`は省略可能
+//let start = str.characters.index(after: str.startIndex)
+//let end = str.characters.index(start, offsetBy: 2)
+String(str.characters[start..<end])
+// → "2️⃣3️⃣"
+
+
+// 一方、例えば、以下のようにunicodeScalarsから取得したIndexでcharactersのsubscriptをすると型違いでエラーになる
+do {
+    let start = str.unicodeScalars.index(after: str.unicodeScalars.startIndex)
+    let end = str.unicodeScalars.index(start, offsetBy: 2)
+    String(str.characters[start..<end])
+    // → error: cannot subscript a value of type 'String.CharacterView' with an index of type 'Range<String.UnicodeScalarView.Index>' String(str.characters[start..<end])
+}
+```
+
+---
+
+ひな形(あとで消す)
+
+![](images/.png)
+
+---
+
+
+```swift:hoge.swift
