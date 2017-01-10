@@ -351,7 +351,7 @@ str[sequentialAccess: nsRange.toRange()!]
 
 ---
 
-UITextViewなど扱いっていると、APIから返ってくるレンジがNSRangeだったりするので、それを安易にStringに適用してしまうと取得できる文字列を間違えたりクラッシュしてしまうことなどにつながります。
+UITextViewなど扱っていると、APIから返ってくるレンジがNSRangeだったりするので、それを安易にStringに適用してしまうと取得できる文字列を間違えたりクラッシュしてしまうことなどにつながります。
 
 ---
 
