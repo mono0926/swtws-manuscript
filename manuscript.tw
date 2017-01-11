@@ -22,16 +22,18 @@ CharacterViewはStringから`.characters`でアクセスできて、各種使用
 リファレンスのOverviewにある通り一般的な文字列操作が一々面倒です。カウントするだけでもcharactersを介す必要があり、さらにIntによるsubscriptも不可でIndex型による操作を強いられます。
 
 ```swift:characters.swift
-let str = "abcde"
+let str = "12345"
 
 // カウント
 str.characters.count
 // → 5
 
-let index: String.CharacterView.Index = str.characters.index(of: "c")!
+// 部分文字列の取得
+let index: String.CharacterView.Index = str.characters.index(of: "3")!
 let chars: String.CharacterView = str.characters.prefix(upTo: index)
 // Stringにキャスト必要
 String(chars)
+// → "12"
 ```
 
 ---
