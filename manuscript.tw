@@ -492,7 +492,7 @@ https://developer.apple.com/reference/swift/string/1643111-enumeratesubstrings
 
 ---
 
-ちなみに僕のTwitter名は、現在"🐶Monor Swift🐶🍎💻📱⌚️"にしていますが、Webでは入力出来たもののiOS版ではすでに文字数オーバーで編集できなくて不便で困っています。iOS版ではNSStringでカウント(UTF16でのカウント)してそうです👀
+ちなみに僕のTwitter名は、現在"🐶Monor Swift🐶🍎💻📱⌚️"にしていますが、ブラウザでは入力出来たもののiOS版では20文字オーバーと判定され編集できなくて不便で困っています。NSStringでカウント(UTF16でのカウント)してそうです👀
 
 ---
 
