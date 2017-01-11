@@ -93,8 +93,7 @@ extension String {
 以上のようにStringから直接取得したIndexはCharacter ViewのIndex操作に使えるので、Indexはcharactersを介さずに済み少しシンプルな記述とできます。
 
 ```swift:count2.swift
-let str = "12345"
-// TODO
+let str = "1️⃣2️⃣3️⃣4️⃣5️⃣"
 str.unicodeScalars.count
 str.characters.count
 
@@ -107,9 +106,7 @@ let end = str.index(start, offsetBy: 2)
 // subscript操作もcharacters介してもどちらでも同じ
 String(str[start...end])
 String(str.characters[start...end])
-// → "234"
-// TODO
-
+// → "2️⃣3️⃣4️⃣"
 
 // 一方、例えば、以下のようにunicodeScalarsから取得したIndexでcharactersのsubscriptをすると型違いでエラーになる
 do {
@@ -126,8 +123,7 @@ do {
 
 ```swift:substring.swift
 str.substring(from: start).substring(to: end)
-// → "234"
-// TODO
+// → "2️⃣3️⃣4️⃣"
 // 以下でも同じ
 String(str[start...end])
 String(str.characters[start...end])
@@ -337,16 +333,14 @@ https://github.com/omaralbeik/SwifterSwift/blob/master/Source/Extensions/StringE
 次の場合StringにRange<Int>でアクセスできてしまうと「元のNSStringの部分文字列」と「NSRangeをtoRangeという標準メソッドで変換してStringから取得した部分文字列」が食い違います。
 
 ```swift:nsstring2.swift
-let str = "12345"
-// TODO
+let str = "1️⃣2️⃣3️⃣4️⃣5️⃣"
 
 let nsRange = NSRange(location: 0, length: 3)
-// → "1"
-// TODO
+// → "1️⃣"
 
 (str as NSString).substring(with: nsRange)
 str[sequentialAccess: nsRange.toRange()!]
-// → "123"
+// → "1️⃣2️⃣3️⃣"
 ```
 
 ---
@@ -431,12 +425,11 @@ Swift 4で文字列周りに変更ありそうな記述ですが、あまり動�
 
 ---
 
-Swiftは後発なだけあって、良く出来ています。Viewで表現が分かれているのは前述の通りですが、次の"jp"のように複数のコードポイント(unicode scalar)を組み合わせたものにも概ね対応しています。
+Swiftは後発なだけあって、良く出来ています。Viewで表現が分かれているのは前述の通りですが、次の"🇯🇵"のように複数のコードポイント(unicode scalar)を組み合わせたものにも概ね対応しています。
 
 ```swift:emoji1.swift
 do {
-    let str = "good"
-    // TODO
+    let str = "👍"
     str.characters.count // 1
     str.unicodeScalars.count// 1
     str.utf8.count // 4
@@ -447,8 +440,7 @@ do {
 }
 
 do {
-    let str = "jp"
-    // TODO
+    let str = "🇯🇵"
     str.characters.count // 1
     str.unicodeScalars.count // 2
     str.utf8.count // 8
@@ -461,11 +453,11 @@ do {
 
 ---
 
-ただ、未対応のものもあって、thumb(肌トーン付き)やfamily(複数絵文字の連結)は、characters.countでは複数扱いになってしまいます。
+ただ、未対応のものもあって、👍🏼(肌トーン付き)や👩‍👩‍👧‍👦(複数絵文字の連結)は、characters.countでは複数扱いになってしまいます。
 
 ```swift:emoji2.swift
 do {
-    let str = "thumb"
+    let str = "👍🏼"
     str.characters.count // 2
     str.unicodeScalars.count // 2
     str.utf8.count // 8
@@ -475,8 +467,7 @@ do {
     // → "1f44d", "1f3fc"
 }
 do {
-    let str = "family"
-// TODO
+    let str = "👩‍👩‍👧‍👦"
     str.characters.count // 4
     str.unicodeScalars.count // 7
     str.utf8.count // 25
