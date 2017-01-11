@@ -83,7 +83,7 @@ extension String {
         // この戻り値の型はIndexDistanceだが、それはIntのtypealiasなのでそのまま返せる
         return distance(from: startIndex, to: endIndex)
     }
-    // 次のように書けば良いが、上のは`characters`使わない縛り
+    // 次のように書けば良いが、上のは`characters`使わない縛りで書いた場合
     var count: Int {
         return characters.count
     }
