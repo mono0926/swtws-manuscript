@@ -61,9 +61,9 @@ public struct String {
 }
 
 // 以下はすべてtrue
+String.Index.self == String.CharacterView.Index.self
 str.startIndex == str.characters.startIndex
 str.endIndex == str.characters.endIndex
-String.Index.self == String.CharacterView.Index.self
 
 // 以下などはfalse
 String.Index.self == String.UnicodeScalarView.Index.self
