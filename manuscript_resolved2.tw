@@ -1,0 +1,318 @@
+それでは、「SwiftのString(文字列) APIとの付き合い方」の発表を始めます。
+https://swift-tweets.github.io の発表概要に記載した通り、そこに挙げている3つの記事は理解済みの前提とします(そうでなくとも分かる話も多いと思いますが)。 #swtws
+
+---
+
+まずSwiftの文字列処理をコード例を交えながら見ていきます。SwiftのStringはCharacter・Unicode Scalar・UTF-16・UTF-8という4つのView(表現)を持っています。 #swtws
+
+---
+
+通常の文字列処理では書記素クラスタ表現であるCharacter Viewを主に扱うことになるはずです。
+書記素クラスタとは、抽象文字すなわち目で見た一文字単位の集合です。 #swtws
+
+---
+
+CharacterViewはStringから`.characters`でアクセスできて、各種使用例はこれらのリファレンスに書かれています:
+
+- https://developer.apple.com/reference/swift/string
+- https://developer.apple.com/reference/swift/string.characterview #swtws
+
+---
+
+リファレンスのOverviewにある通り一般的な文字列操作が一々面倒です。カウントするだけでもcharactersを介す必要があり、さらにIntによるsubscriptも不可でIndex型による操作を強いられます。 #swtws
+
+https://gist.github.com/013284d6f82c203a912ef9a8ca97c584
+
+![](images/013284d6f82c203a912ef9a8ca97c584.png)
+
+---
+
+こういった扱いのしにくさは、SwiftのString APIが厳密となっているトレードオフであるものの、とはいえ普段の文字列処理の際に一々煩雑な記述を強いられるのは抵抗も感じます。 #swtws
+
+---
+
+この扱いにくさへどう対処するのが良いか、いくつかの観点で考察していきます。
+まずCharacter Viewなど4つのViewに分かれているのは、「文字列」といっても色々な表現があることに依ります。 #swtws
+
+---
+
+それが予めきちんと分類されているのは良いですが、最も扱う頻度の多いCharacter Viewをデフォルトで直接扱いたくなってきます。
+String APIを触っていると実は標準で中途半端にそうなっていることが見受けられます。 #swtws
+
+---
+
+例えば、StringからもIndexを取得できますが、それはCharacterViewのIndexのtypealiasとして定義されているため、実はcharactersを介して取得したものまったく同じです。 #swtws
+
+https://gist.github.com/bedd7c8db9359ed90fe38610d08527fa
+
+![](images/bedd7c8db9359ed90fe38610d08527fa.png)
+
+---
+
+取得できるIndexが同一ということは、すなわちStringはデフォルトでCharacter View扱いとなっているとみなせるのではないでしょうか。 #swtws
+
+---
+
+カウントも、Index距離を利用することで、charactersを介さずCharacter Viewのcountと同じものを取得することが可能です。 #swtws
+
+https://gist.github.com/b9018816e92b415166912024382e93b2
+
+![](images/b9018816e92b415166912024382e93b2.png)
+
+---
+
+以上のようにStringから直接取得したIndexはCharacter ViewのIndex操作に使えるので、Indexはcharactersを介さずに済み少しシンプルな記述とできます。 #swtws
+
+https://gist.github.com/d6e1ecadb623735cfe8cf95270b218bc
+
+![](images/d6e1ecadb623735cfe8cf95270b218bc.png)
+
+---
+
+また、Stringには `substring` メソッドもあるので、次のように書くこともできます(パフォーマンスは少し劣る)。いずれの方法にせよ、characters介さなくて済むところは省略すると多少楽になります。 #swtws
+
+https://gist.github.com/364c61015d47a63b20028336db806223
+
+![](images/364c61015d47a63b20028336db806223.png)
+
+---
+
+以上のように、APIの作り的にも挙動的にもStringはデフォルトでCharacter View扱いとみなせ、かつそれを利用して多少楽になると思っていますが、まだ多少違和感が残っています。
+一番不思議なのは、Stringに対して直接`count`できないことです。 #swtws
+
+---
+
+これは、StringがBidirectionalCollection・RangeReplaceableCollectionに準拠するようにすれば、ほぼcharactersと同じメソッドを直接呼べるようになります。 #swtws
+
+https://gist.github.com/dcd7058ec47adffe52f1f933ec98deee
+
+![](images/dcd7058ec47adffe52f1f933ec98deee.png)
+
+---
+
+これを施すとcountだけでなく、コレクション操作や、`prefix`・`suffix`などInt指定で部分文字列取得できるようになったりと色々便利になります。 #swtws
+
+https://gist.github.com/922fb77651f1f1ea37f5c0062560ce8d
+
+![](images/922fb77651f1f1ea37f5c0062560ce8d.png)
+
+---
+
+ただ、これは罠もありそうなので、注意して取り扱った方が良さそうです。詳しくは https://medium.com/swift-column/swift-string-16245b2723b4#.achuihxel に書きましたが、`var`で定義した文字列に`removeFirst(_:)`を使うとクラッシュして対処が必要でした。 #swtws
+
+---
+
+なので、この方法を用いるかどうかの判断はお任せします。僕は、文字列内容によってクラッシュすることは無さそう・開発段階で罠も充分検知できるだろう、と感じているので実際に活用しています。 #swtws
+
+---
+
+一旦まとめると、Stringは元々Character Viewをデフォルトとみなしているようなのでcharactersプロパティを省略することで多少簡潔に書けること、さらにStringをコレクション系のプロトコルに準拠させるとより強力になることを紹介しました。 #swtws
+
+---
+
+次に、Indexの取り扱いについてです。今までのコード例を見れば分かる通り、Intで直接subscript操作出来ずに、startIndex・endIndexからのoffsetで辿っていく作りになっているのが面倒です。 #swtws
+
+---
+
+もちろんこれも理由があって、僕は主な理由は高コストな操作であることを意識させるようなAPIとなっているからだと思っています。 #swtws
+
+---
+
+StringおよびそのViewはRandomAccessCollectionではなくBidirectionalCollectionということもポイントです:
+- https://developer.apple.com/reference/swift/randomaccesscollection
+- https://developer.apple.com/reference/swift/bidirectionalcollection #swtws
+
+---
+
+特にCharacter Viewにおいて抽象文字すなわち目で見た何文字かという概念で文字列を走査・カウントするのは、それらの文字部分に至るまで先頭あるいは終端からすべて走査していく必要があります。 #swtws
+
+---
+
+この性質が顕著に表れているのが`count`プロパティで、その計算量はO(n)です。
+APIデザインガイドラインには、プロパティは `O(1)` であるべきで、そうでない場合はドキュメントに書くように、記載されていてちょうどその例外にあたります。 #swtws
+
+---
+
+`count`に限らず、同様に多くの文字列アクセスはその性質上 `O(n)` となっています。 #swtws
+
+---
+
+Swiftでは所望のIndex取得のAPIを始端・末端からのO(n)の走査であることを意識させて、Indexを用いたsubscriptなどの部分文字列取得処理はO(1)という設計になっています。 #swtws
+
+---
+
+文字列終端付近のIndexを始端から辿るとほぼ文字列全スキャンとなりますが、終端からアクセスするとO(1)に近い効率の良い処理となります。 #swtws
+
+https://gist.github.com/aa10c3cee112e26d4d4aedf53269b01f
+
+![](images/aa10c3cee112e26d4d4aedf53269b01f.png)
+
+---
+
+しかし他のIntでsubscriptアクセスできる言語では文字列アクセスは非効率というわけではないです。例えばRubyだと次の書き方はともに文字列の最後を取得する処理ですが、後者のように高効率に書くことができます。 #swtws
+
+https://gist.github.com/26b3b999a0281c9ecd0f9076f50f461f
+
+![](images/26b3b999a0281c9ecd0f9076f50f461f.png)
+
+---
+
+このように、Indexで文字列範囲を指定するのは、パフォーマンス担保のための必然ではなく、単に高コストな操作であることを意識しやすいようになっているだけということだと思っています。 #swtws
+
+---
+
+また、SwiftのStringはCharacter Viewベースになっていることを意識しながら扱えば、IndexではなくIntで直接部分文字列の範囲指定しても破綻しないです。 #swtws
+
+https://gist.github.com/70b0423cca0c43b70a7b5993ef5eed47
+
+![](images/70b0423cca0c43b70a7b5993ef5eed47.png)
+
+---
+
+とはいえ、せっかくSwiftがパフォーマンスに気を使ったAPI設計にしているのに、`str[1..<3]` のようにアクセスできる`subscript`などを追加してしまうのはちょっと躊躇します。 #swtws
+
+---
+
+前述の通りパフォーマンスを意識させることが本質ということは、それを明示すれば良いということで、次のようにラベル付き(sequentialAccessとしました)のsubscriptを定義すれば良いのではと思いました。 #swtws
+
+https://gist.github.com/6c6d837cd75dffdf63a656ec50b81314
+
+![](images/6c6d837cd75dffdf63a656ec50b81314.png)
+
+---
+
+ラベルで通常の挙動とは違うことを明示するのは https://github.com/apple/swift-evolution/blob/master/proposals/0080-failable-numeric-initializers.md のイニシャライザーでも提案されていますし、分かりやすいかなと思っています。 #swtws
+
+---
+
+文字列の始端からベタに走査する処理にのみ対応していて、`str[sequentialAccess: -1]` などで終端から効率よく辿れるようになどもサポートする余地もありますが、パフォーマンス気になる処理は標準APIをベタに使えば良いかなとも思ったり。 #swtws
+
+---
+
+一応 https://github.com/mono0926/SwiftyStringExtension で公開していますが、まだこっそり自分のプロジェクトに使っているだけで公にはリリースしていないです。
+利用する場合、罠が潜んでいる可能性もあるので、ご注意ください。 #swtws
+
+---
+
+SwifterSwift では、ラベル無しのsubscriptメソッドを追加していますが、標準APIのごとくカジュアルにパフォーマンス問題になりそうな記述ができてしまうので、ちょっと危険かなと思いました(便利ですが)。
+https://github.com/omaralbeik/SwifterSwift/blob/master/Source/Extensions/StringExtensions.swift#L279-L310 #swtws
+
+---
+
+また、IntでStringの要素にアクセスして良いかという懸念はパフォーマンス以外にもNSStringとの相互運用にもありそうです。 #swtws
+
+---
+
+次の場合StringにRange<Int>でアクセスできてしまうと「元のNSStringの部分文字列」と「NSRangeをtoRangeという標準メソッドで変換してStringから取得した部分文字列」が食い違います。 #swtws
+
+https://gist.github.com/7f97f53234c4567acde4140106b13313
+
+![](images/7f97f53234c4567acde4140106b13313.png)
+
+---
+
+UITextViewなど扱っていると、APIから返ってくるレンジがNSRangeだったりするので、それを安易にStringに適用してしまうと取得できる文字列を間違えたりクラッシュしてしまうことなどにつながります。 #swtws
+
+---
+
+標準のsubstringメソッドは、Range<String.index>を受けるようになっていてRange<Int>は受け付けないため、先ほどのミスはコンパイルエラーで防げます。Stringを「便利」にした際はこのあたりにも気を付ける必要が出てきます。 #swtws
+
+---
+
+ちなみにどう対処するのが良いかというと、2つの方法が考えられます。
+1つめは、StringをNSStringにキャストしてからNSRangeで部分文字列取得するやり方です。 #swtws
+
+---
+
+2つめは、NSRangeはUTF16のIndex範囲であるので、それを元に適切なRange<Int>に変換して、Stringから部分文字列取得するやり方 ( https://medium.com/swift-column/swift-string-16245b2723b4#.achuihxel に記載 )です。 #swtws
+
+---
+
+NSプレフィックス系の型を極力扱いたくなかったので、僕は後者を選択していますが1つめのやり方の方が素直な気もしています🤔 #swtws
+
+---
+
+以上で、現状のSwiftのString APIの扱いのしにくさの本質はどこにあるのかの説明と、それに対する自分のアプローチを紹介しました。 #swtws
+
+---
+
+別解としては、 @koher さんがこっそり公開している https://github.com/koher/easy-text のアプローチも良いなと思いました。
+初期化時にStringのCharacter Viewを、Arrayとして保持してしまう、という富豪的な実装になっています。 #swtws
+
+---
+
+イニシャライザーで文字列全スキャンするためO(n)となっていて( https://github.com/koher/easy-text/blob/master/Sources/Text.swift#L4-L6 )イレギュラーなので実際ライブラリとして公開する場合、その旨をコメントに書いてあると良いかなと思いました。 #swtws
+
+---
+
+また、他の言語でもおそらく文字列の初期化時にその全スキャンがかかるようになっているのは珍しいはずなので取り扱いには注意ですが、普段多く扱うような大した長さでは無い文字列処理はすごくやりやすくなりそうで良いと思いました。 #swtws
+
+---
+
+あるいは、`NSString`にキャストするとIntで範囲指定できるようになりますが、抽象文字がUTF16一つで表現できる時しか使えなかったり微妙です(そもそもNSプレフィックスの型は極力使わない方が良いですね) #swtws
+
+https://gist.github.com/e33b86ffb0a77d8ad6de7899a0225a2a
+
+![](images/e33b86ffb0a77d8ad6de7899a0225a2a.png)
+
+---
+
+さきほどのNSStringのコード例見ると分かる通り、そういえばObjective-C時代から文字列処理はやりにくくて、それに開発者が慣れてしまっている感もあるかなと思いました(　´･‿･｀)
+今後Swiftの標準APIが改善されていくのを期待しています。 #swtws
+
+---
+
+https://github.com/apple/swift-evolution/blob/master/README.md の「String re-evaluation」という項目にも注目です。 #swtws
+
+---
+
+Swift 4で文字列周りに変更ありそうな記述ですが、あまり動きが無いので間に合わず5以降になるかもと思っています。
+
+> Swift 4 seeks to make strings more powerful and easier-to-use... #swtws
+
+---
+
+以上、改めてSwiftの文字列処理に向き合ってみましたが、現状初学者が触れる際の最も大きな関門の一つになる程度には扱いにくいと思いました。Swift 3までの変更の多さもあいまって、適当にぐぐって所望の文字列処理をするまでかなり苦労しそうです。 #swtws
+
+---
+
+少し枠が余ったので、最後にSwiftに限らずですが悩ましい文字列のカウント問題について触れていきます。 #swtws
+
+---
+
+Swiftは後発なだけあって、良く出来ています。Viewで表現が分かれているのは前述の通りですが、次の"🇯🇵"のように複数のコードポイント(unicode scalar)を組み合わせたものにも概ね対応しています。 #swtws
+
+https://gist.github.com/f2a86f6c2ab88ee9162e2732ab85215f
+
+![](images/f2a86f6c2ab88ee9162e2732ab85215f.png)
+
+---
+
+ただ、未対応のものもあって、👍🏼(肌トーン付き)や👩‍👩‍👧‍👦(複数絵文字の連結)は、characters.countでは複数扱いになってしまいます。 #swtws
+
+https://gist.github.com/e358c2fb62eec262beb65bace48cdddd
+
+![](images/e358c2fb62eec262beb65bace48cdddd.png)
+
+---
+
+このあたりは自前でやるしかないかというとそうではなく、 `enumerateSubstrings(in:options:_:)` にて列挙すると、ともに正しく1文字扱いされます。
+
+https://developer.apple.com/reference/swift/string/1643111-enumeratesubstrings #swtws
+
+---
+
+ただ、このメソッドで厳密に数えるのが常に正解かというと、特にマルチプラットフォームの場合は必ずしもそうではなく各プラットフォーム・データベースの扱いやすさなど踏まえて、良い感じに妥協仕様にするのが現実的かなと思っています。 #swtws
+
+---
+
+ちなみに僕のTwitter名は、現在"🐶Monor Swift🐶🍎💻📱⌚️"にしていますが、ブラウザでは入力出来たもののiOS版では20文字オーバーと判定され編集できなくて不便で困っています。NSStringでカウント(UTF16でのカウント)してそうです👀 #swtws
+
+---
+
+新しめの絵文字などのカウントに追従できていないのは仕方ないですが、せめてプラットフォームで揃える努力はして欲しいなと思いました。 #swtws
+
+---
+
+最後ちょっと余談になりましたが、発表は以上です。
+ご静聴ありがとうございました(　´･‿･｀) #swtws

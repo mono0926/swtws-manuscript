@@ -6,3 +6,10 @@ swtws sample.tw --presentation --github 91b70cad983ad3ca8dff998e93f15f281ade03ac
 
 # 事前解決済みで本番
 swtws sample_output.tw --presentation --github 91b70cad983ad3ca8dff998e93f15f281ade03ac --twitter Y6tGRGuCvkfuhcjkTKmQJtbPY,43MPmNkkPJuNPzxcjVbGp5r7aHGDX4p809leYkVahOxz9D09cn,35741880-dlAcJSWVaHzkmUMHtzKV2pnJAVf0ir0t0FeUrpO2N,uSv4kLepp3QC4H7ahH2JCWuh8MArXWiwKcSsznQ6civHi
+
+# gist画像
+
+swtws manuscript_resolved.tw --resolve-gist --image-output images >  manuscript_resolved2.tw 
+
+# 本当の本番
+swtws manuscript_resolved2.tw --presentation --github 91b70cad983ad3ca8dff998e93f15f281ade03ac --twitter Y6tGRGuCvkfuhcjkTKmQJtbPY,43MPmNkkPJuNPzxcjVbGp5r7aHGDX4p809leYkVahOxz9D09cn,35741880-dlAcJSWVaHzkmUMHtzKV2pnJAVf0ir0t0FeUrpO2N,uSv4kLepp3QC4H7ahH2JCWuh8MArXWiwKcSsznQ6civHi
